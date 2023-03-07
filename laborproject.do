@@ -151,7 +151,7 @@ collapse (sum) voti_lista votanti, by(circoscrizione lista)
 save "voteshare08.dta", replace 
 
 * Keep only desired parties and calculate their share of vote by province
-gen keep = (lista == "FORZA NUOVA" | lista == "LEGA NORD" | lista == "LA DESTRA - FIAMMA TRICOLORE")
+gen keep = (lista == "FORZA NUOVA" | lista == "LEGA NORD" | lista == "LA DESTRA - FIAMMA TRICOLORE" | lista == "IL POPOLO DELLA LIBERTA'")
 keep if keep == 1
 
 drop keep
@@ -160,7 +160,7 @@ drop keep
 collapse (sum) voti_lista votanti, by(circoscrizione lista)
 
 * Keep only desired parties and calculate their share of vote by province
-gen keep = (lista == "FORZA NUOVA" | lista == "LEGA NORD" | lista == "LA DESTRA - FIAMMA TRICOLORE")
+gen keep = (lista == "FORZA NUOVA" | lista == "LEGA NORD" | lista == "LA DESTRA - FIAMMA TRICOLORE" | lista == "IL POPOLO DELLA LIBERTA'")
 keep if keep == 1
 
 drop keep
@@ -311,12 +311,17 @@ drop if _merge==1
 drop if _merge==2
 drop _merge
 
+merge m:1 nquest nord anno using ldip.dta
+drop if _merge==1
+drop if _merge==2
+drop _merge
+
 
 
 
 gen eta2=eta^2
 gen unemp=1 if qualp10==10
-drop if qualp10==10
+*drop if qualp10==10
 gen femmina = .
 replace femmina = 0 if sesso == 1
 replace femmina = 1 if sesso == 2
@@ -339,12 +344,13 @@ replace yedu=21 if studio==6 // 21 years of schooling to complete a postgraduate
 
 tab yedu
 
-
-
+*drop iprov acom5 par eta5 settp3 qualp7 qualp10 qualp3 nonoc area5 area3 settp7 cfdic cfeur qualp7n acom4c settp9
+*drop settp11 cfred nequ perl perc nperl etapen asnonoc qualp10n asnonoc2 
+*drop yl2 yl1 ytp1 ytp2 ym3 yl ytp yta yt ym1 ym2 ym yca1 yca2 yca ycf2 ycf3 ycf4 y1 ycf1 ycf yc ycf1l ycf2l ycfl unemp 
 
 * Specify panel variables
 
-egen  id = group(nquest anasc sesso)
+egen  id = group(nquest anasc ireg)
 
 
 
@@ -367,15 +373,44 @@ xtset id wave
 gen figli=0
 replace figli=1 if ncomp>2 | ncomp==2 & ncomp-nperc>0
 
+gen sposato=0
+replace sposato=1 if staciv==1
+
+gen femfigli=0
+replace femfigli=femmina*figli
+
+gen whitecollar = 0
+replace whitecollar = 1 if qualp10n==2 
+gen bluecollar = 0
+replace bluecollar = 1 if qualp10n==1
+gen manager = 0
+replace manager =1 if qualp10n==3 | qualp10n == 4
+
+gen south=0
+replace south = 1 if area3 == 3 
+
+gen north=0
+replace north =1 if area3 == 1
+
+
+xtreg logy femmina eta eta2 yedu sposato figli femfigli voteshare i.ireg i.wave if imm==1, fe robust
+
 
 
 * Regression for immigrants
 
-reghdfe logy femmina eta eta2 yedu figli voteshare if imm == 1, absorb(ireg wave) cluster(id)
+reghdfe logy oretot femmina eta eta2 yedu sposato figli femfigli whitecollar bluecollar manager voteshare if imm == 1, absorb(ireg wave) cluster(id)
 
 * Regression for natives
 
-reghdfe logy femmina eta eta2 yedu figli voteshare if imm == 0, absorb(ireg wave) cluster(id)
+reghdfe logy oretot femmina eta eta2 yedu sposato figli femfigli voteshare if imm == 0, absorb(ireg wave) cluster(id)
+
+* Together
+
+gen voteshareimm=voteshare*imm
+
+
+reghdfe logy imm oretot femmina eta eta2 yedu sposato figli femfigli whitecollar bluecollar manager voteshare voteshareimm, absorb(ireg wave) cluster(id)
 
 
 
