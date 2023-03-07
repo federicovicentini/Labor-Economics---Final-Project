@@ -299,11 +299,20 @@ drop _merge
 
 keep if anno == 2010 | anno == 2014 | anno == 2020
 
+gen voteshare=.
+replace voteshare = voteshare08 if anno == 2010
+replace voteshare = voteshare13 if anno == 2014
+replace voteshare = voteshare18 if anno == 2020
+
+drop voteshare08 voteshare13 voteshare18
 
 merge m:1 nquest nord anno using rper.dta
 drop if _merge==1
 drop if _merge==2
 drop _merge
+
+
+
 
 gen eta2=eta^2
 gen unemp=1 if qualp10==10
@@ -311,12 +320,68 @@ drop if qualp10==10
 gen femmina = .
 replace femmina = 0 if sesso == 1
 replace femmina = 1 if sesso == 2
-gen ylm=log(y)
+gen logy=log(y)
+gen imm=.
+replace imm = 0 if enasc2 == .
+replace imm = 1 if enasc2 != .
 
-reg ylm femmina eta eta2 studio if !missing(), robust
 
 
-* per la regressione, inserire solo 2014 e 2020. diue regressioni separate per native e immigrants. aggiungendo region fixed effects e wave fixed effects
+*reg logy femmina eta eta2 studio voteshare imm if !missing(), robust
+
+gen yedu=. // We generate a new variable yedu (years of education) and set it equal to zero
+replace yedu=0 if studio==1 // 5 years of schooling to complete a primary level of education
+replace yedu=5 if studio==2 // 5 years of schooling to complete a primary level of education
+replace yedu=8 if studio==3 // 8 years of schooling to complete a lower secondary level of education
+replace yedu=13 if studio==4 // 13 years of schooling to complete a secondary level of education
+replace yedu=18 if studio==5 // 18 years of schooling to complete a tertiary level of education
+replace yedu=21 if studio==6 // 21 years of schooling to complete a postgraduate level
+
+tab yedu
+
+
+
+
+* Specify panel variables
+
+egen  id = group(nquest anasc sesso)
+
+
+
+*egen id = group(nord nquest)
+
+gen wave=.
+replace wave = 1 if anno==2010
+replace wave = 2 if anno==2014
+replace wave = 3 if anno==2020
+
+duplicates tag id anno, gen(isdup) 
+drop if isdup
+
+
+xtset id wave
+
+
+
+
+gen figli=0
+replace figli=1 if ncomp>2 | ncomp==2 & ncomp-nperc>0
+
+
+
+* Regression for immigrants
+
+reghdfe logy femmina eta eta2 yedu figli voteshare if imm == 1, absorb(ireg wave) cluster(id)
+
+* Regression for natives
+
+reghdfe logy femmina eta eta2 yedu figli voteshare if imm == 0, absorb(ireg wave) cluster(id)
+
+
+
+
+
+* per la regressione, inserire solo 2010 2014 e 2020. diue regressioni separate per native e immigrants. aggiungendo region fixed effects e wave fixed effects
 
 * si può anche aggiungere una dummy per risultati regionali rispetto la mediana, o due dummy, 50 e 75 % per edere monotonicità effettpo. altra possibilità eùè usare share e share al quadrato
 
