@@ -63,6 +63,12 @@ drop voti_lista votanti
 
 collapse (sum) voteshare13, by(region)
 
+
+egen medianshare13 = median(voteshare13)
+
+egen supershare13 = pctile(voteshare13), p(75)
+
+
 * Save the results to a new dataset
 save "voteshare.dta", replace 
 clear
@@ -127,8 +133,14 @@ collapse (sum) voti_lista votanti, by(region lista)
 gen voteshare18 = voti_lista / votanti
 drop voti_lista votanti
 
-
 collapse (sum) voteshare18, by(region)
+
+egen medianshare18 = median(voteshare18)
+
+
+egen supershare18 = pctile(voteshare18), p(75)
+
+
 
 * Save the results to a new dataset
 save "voteshare18.dta", replace 
@@ -200,6 +212,14 @@ drop voti_lista votanti
 
 
 collapse (sum) voteshare08, by(region)
+
+egen medianshare08 = median(voteshare08)
+
+
+egen supershare08 = pctile(voteshare08), p(75)
+
+
+
 
 * Save the results to a new dataset
 save "voteshare08.dta", replace 
@@ -304,7 +324,23 @@ replace voteshare = voteshare08 if anno == 2010
 replace voteshare = voteshare13 if anno == 2014
 replace voteshare = voteshare18 if anno == 2020
 
-drop voteshare08 voteshare13 voteshare18
+gen medianshare=.
+replace medianshare = medianshare08 if anno == 2010
+replace medianshare = medianshare13 if anno == 2014
+replace medianshare = medianshare18 if anno == 2020
+
+
+gen supershare=.
+replace supershare = supershare08 if anno == 2010
+replace supershare = supershare13 if anno == 2014
+replace medianshare = supershare18 if anno == 2020
+
+
+
+
+drop voteshare08 voteshare13 voteshare18 medianshare08 medianshare13 medianshare18 supershare08 supershare13 supershare18
+
+
 
 merge m:1 nquest nord anno using rper.dta
 drop if _merge==1
@@ -367,7 +403,7 @@ drop if isdup
 
 xtset id wave
 
-
+sort id wave
 
 
 gen figli=0
@@ -392,6 +428,20 @@ replace south = 1 if area3 == 3
 gen north=0
 replace north =1 if area3 == 1
 
+gen voteshare2=voteshare^2
+
+gen dis=0
+replace dis=1 if enasc2==2
+
+gen disvoteshare=dis*voteshare
+
+gen aboveshare = 0
+replace aboveshare = 1 if voteshare>medianshare
+
+gen extrashare = 0 
+replace extrashare = 1 if voteshare>supershare
+
+
 
 xtreg logy femmina eta eta2 yedu sposato figli femfigli voteshare i.ireg i.wave if imm==1, fe robust
 
@@ -399,20 +449,57 @@ xtreg logy femmina eta eta2 yedu sposato figli femfigli voteshare i.ireg i.wave 
 
 * Regression for immigrants
 
-reghdfe logy oretot femmina eta eta2 yedu sposato figli femfigli whitecollar bluecollar manager voteshare if imm == 1, absorb(ireg wave) cluster(id)
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north voteshare dis if imm == 1, absorb(wave) cluster(id) resid
+
+predict residuals, resid
+
+// Generate a variable for the predicted values
+gen predicted = logy - residuals
+
+// Create a scatterplot of the residuals
+scatter residuals predicted if !missing(residuals, predicted)
+
+
+
 
 * Regression for natives
 
-reghdfe logy oretot femmina eta eta2 yedu sposato figli femfigli voteshare if imm == 0, absorb(ireg wave) cluster(id)
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north voteshare dis if imm == 0, absorb(wave) cluster(id)
 
 * Together
 
 gen voteshareimm=voteshare*imm
 
 
-reghdfe logy imm oretot femmina eta eta2 yedu sposato figli femfigli whitecollar bluecollar manager voteshare voteshareimm, absorb(ireg wave) cluster(id)
+reghdfe logy imm oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north voteshare dis , absorb(wave) cluster(id)
 
 
+* Regression for immigrants with the square of votes
+
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north voteshare voteshare2 dis if imm == 1, absorb(wave) cluster(id)
+
+* Regression for natives with the square of votes
+
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north voteshare voteshare2 dis if imm == 0, absorb(wave) cluster(id)
+
+
+* Regression for immigrants with dummy for votes above the median
+
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north aboveshare dis if imm == 1, absorb(wave) cluster(id)
+
+
+* Regression for natives with dummy for votes above the median
+
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north aboveshare dis if imm == 0, absorb(wave) cluster(id)
+
+* Regression for immigrants with dummy for votes above the median and dummy for above 75th percentile
+
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north aboveshare extrashare dis if imm == 1, absorb(wave) cluster(id)
+
+
+* Regression for natives with dummy for votes above the median and dummy for above 75th percentile
+
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north aboveshare extrashare dis if imm == 0, absorb(wave) cluster(id)
 
 
 
