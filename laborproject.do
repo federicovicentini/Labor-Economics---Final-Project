@@ -445,6 +445,8 @@ replace extrashare = 1 if voteshare>supershare
 
 xtreg logy femmina eta eta2 yedu sposato figli femfigli voteshare i.ireg i.wave if imm==1, fe robust
 
+*drop if qualp10>4
+
 
 
 * Regression for immigrants
@@ -459,12 +461,26 @@ gen predicted = logy - residuals
 // Create a scatterplot of the residuals
 scatter residuals predicted if !missing(residuals, predicted)
 
+drop predicted residuals
 
 
 
 * Regression for natives
 
-reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north voteshare dis if imm == 0, absorb(wave) cluster(id)
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north voteshare dis if imm == 0, absorb(wave) cluster(id) resid
+
+predict residuals, resid
+
+// Generate a variable for the predicted values
+gen predicted = logy - residuals
+
+// Create a scatterplot of the residuals
+scatter residuals predicted if !missing(residuals, predicted)
+
+drop predicted residuals
+
+
+
 
 * Together
 
@@ -492,6 +508,16 @@ reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager n
 
 reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north aboveshare dis if imm == 0, absorb(wave) cluster(id)
 
+* Generate a new aboveshare dummy, for votes vetween median and 75th perc
+
+drop aboveshare
+
+gen aboveshare = 0
+replace aboveshare = 1 if voteshare>medianshare & voteshare<supershare
+
+
+
+
 * Regression for immigrants with dummy for votes above the median and dummy for above 75th percentile
 
 reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north aboveshare extrashare dis if imm == 1, absorb(wave) cluster(id)
@@ -506,5 +532,31 @@ reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager n
 * per la regressione, inserire solo 2010 2014 e 2020. diue regressioni separate per native e immigrants. aggiungendo region fixed effects e wave fixed effects
 
 * si può anche aggiungere una dummy per risultati regionali rispetto la mediana, o due dummy, 50 e 75 % per edere monotonicità effettpo. altra possibilità eùè usare share e share al quadrato
+
+********************************************************
+********************************************************
+******   OAXACA DECOMPOSIION ***************************
+********************************************************
+********************************************************
+
+
+
+*
+* BELOW YOU CAN SEE HOW YOU SHOULD USE OAXACA
+* DOMANI PROVIAMO A INTEGRARLO
+
+
+*use mydata.dta, clear
+
+*reg y x1 x2 if group==1
+*estimates store reg1
+
+*reg y x1 x2 if group==2
+*estimates store reg2
+
+*oaxaca x1 x2, cov(z) model(reg1, reg2)
+
+
+
 
 
