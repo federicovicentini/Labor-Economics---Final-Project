@@ -561,4 +561,6 @@ oaxaca logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager no
 
 * AGGIUNGI QUALCHE ALTRO CONTROLLO PER LE MACROAREE (CENTRO NORDEST NORDOVEST)
 
+summarize logy oretot femmina eta yedu figli whitecollar bluecollar manager northeast northwest south aboveshare extrashare voteshare
+
 
