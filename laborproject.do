@@ -428,6 +428,16 @@ replace south = 1 if area3 == 3
 gen north=0
 replace north =1 if area3 == 1
 
+gen northeast=0
+replace northeast=1 if area5==2
+
+gen northwest=0
+replace northwest=1 if area5==1
+
+gen center=0
+replace center=1 if area3 == 2
+
+
 gen voteshare2=voteshare^2
 
 gen dis=0
@@ -451,7 +461,7 @@ xtreg logy femmina eta eta2 yedu sposato figli femfigli voteshare i.ireg i.wave 
 
 * Regression for immigrants
 
-reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north voteshare dis if imm == 1, absorb(wave) cluster(id) resid
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south voteshare dis if imm == 1, absorb(wave) cluster(id) resid
 
 predict residuals, resid
 
@@ -467,7 +477,7 @@ drop predicted residuals
 
 * Regression for natives
 
-reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north voteshare dis if imm == 0, absorb(wave) cluster(id) resid
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south voteshare dis if imm == 0, absorb(wave) cluster(id) resid
 
 predict residuals, resid
 
@@ -487,26 +497,26 @@ drop predicted residuals
 gen voteshareimm=voteshare*imm
 
 
-reghdfe logy imm oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north voteshare dis , absorb(wave) cluster(id)
+reghdfe logy imm oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south voteshare dis , absorb(wave) cluster(id)
 
 
 * Regression for immigrants with the square of votes
 
-reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north voteshare voteshare2 dis if imm == 1, absorb(wave) cluster(id)
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south voteshare voteshare2 dis if imm == 1, absorb(wave) cluster(id)
 
 * Regression for natives with the square of votes
 
-reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north voteshare voteshare2 dis if imm == 0, absorb(wave) cluster(id)
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south voteshare voteshare2 dis if imm == 0, absorb(wave) cluster(id)
 
 
 * Regression for immigrants with dummy for votes above the median
 
-reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north aboveshare dis if imm == 1, absorb(wave) cluster(id)
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south aboveshare dis if imm == 1, absorb(wave) cluster(id)
 
 
 * Regression for natives with dummy for votes above the median
 
-reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north aboveshare dis if imm == 0, absorb(wave) cluster(id)
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south aboveshare dis if imm == 0, absorb(wave) cluster(id)
 
 * Generate a new aboveshare dummy, for votes vetween median and 75th perc
 
@@ -520,12 +530,12 @@ replace aboveshare = 1 if voteshare>medianshare & voteshare<supershare
 
 * Regression for immigrants with dummy for votes above the median and dummy for above 75th percentile
 
-reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north aboveshare extrashare dis if imm == 1, absorb(wave) cluster(id)
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south aboveshare extrashare dis if imm == 1, absorb(wave) cluster(id)
 
 
 * Regression for natives with dummy for votes above the median and dummy for above 75th percentile
 
-reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager north aboveshare extrashare dis if imm == 0, absorb(wave) cluster(id)
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south aboveshare extrashare dis if imm == 0, absorb(wave) cluster(id)
 
 
 
