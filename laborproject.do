@@ -553,7 +553,6 @@ oaxaca logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager no
 * si può anche aggiungere una dummy per risultati regionali rispetto la mediana, o due dummy, 50 e 75 % per edere monotonicità effettpo. altra possibilità eùè usare share e share al quadrato
 
 
-
 * CONTROLLA QUALI REGIONI POSSONO ESSERE DRINVING PER L'EXTRASHARE
 
 * a quanto pare sono Lombardia, Veneto, Friuli, Campania nel 2008
