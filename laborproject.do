@@ -333,7 +333,7 @@ replace medianshare = medianshare18 if anno == 2020
 gen supershare=.
 replace supershare = supershare08 if anno == 2010
 replace supershare = supershare13 if anno == 2014
-replace medianshare = supershare18 if anno == 2020
+replace supershare = supershare18 if anno == 2020
 
 
 
@@ -474,7 +474,6 @@ scatter residuals predicted if !missing(residuals, predicted)
 drop predicted residuals
 
 
-
 * Regression for natives
 
 reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south voteshare dis if imm == 0, absorb(wave) cluster(id) resid
@@ -489,6 +488,8 @@ scatter residuals predicted if !missing(residuals, predicted)
 
 drop predicted residuals
 
+
+oaxaca logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south voteshare, by(imm) weight(1)
 
 
 
@@ -508,6 +509,8 @@ reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager n
 
 reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south voteshare voteshare2 dis if imm == 0, absorb(wave) cluster(id)
 
+oaxaca logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south voteshare voteshare2, by(imm) weight(1)
+
 
 * Regression for immigrants with dummy for votes above the median
 
@@ -517,6 +520,10 @@ reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager n
 * Regression for natives with dummy for votes above the median
 
 reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south aboveshare dis if imm == 0, absorb(wave) cluster(id)
+
+
+oaxaca logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south aboveshare, by(imm) weight(1)
+
 
 * Generate a new aboveshare dummy, for votes vetween median and 75th perc
 
@@ -537,38 +544,22 @@ reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager n
 
 reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south aboveshare extrashare dis if imm == 0, absorb(wave) cluster(id)
 
+oaxaca logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south aboveshare extrashare, by(imm) weight(1)
+
 
 
 * per la regressione, inserire solo 2010 2014 e 2020. diue regressioni separate per native e immigrants. aggiungendo region fixed effects e wave fixed effects
 
 * si può anche aggiungere una dummy per risultati regionali rispetto la mediana, o due dummy, 50 e 75 % per edere monotonicità effettpo. altra possibilità eùè usare share e share al quadrato
 
-********************************************************
-********************************************************
-******   OAXACA DECOMPOSIION ***************************
-********************************************************
-********************************************************
-
-
-
-*
-* BELOW YOU CAN SEE HOW YOU SHOULD USE OAXACA
-* DOMANI PROVIAMO A INTEGRARLO
-
-
-*use mydata.dta, clear
-
-*reg y x1 x2 if group==1
-*estimates store reg1
-
-*reg y x1 x2 if group==2
-*estimates store reg2
-
-*oaxaca x1 x2, cov(z) model(reg1, reg2)
-
 
 
 * CONTROLLA QUALI REGIONI POSSONO ESSERE DRINVING PER L'EXTRASHARE
+
+* a quanto pare sono Lombardia, Veneto, Friuli, Campania nel 2008
+* Lombardia, Veneto, Campania e Puglia nel 2013
+* Piemonte, Veneto, Lombardia, Friuli e Umbria nel 2018
+
 * AGGIUNGI QUALCHE ALTRO CONTROLLO PER LE MACROAREE (CENTRO NORDEST NORDOVEST)
 
 
