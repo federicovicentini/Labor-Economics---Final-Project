@@ -453,7 +453,7 @@ replace extrashare = 1 if voteshare>supershare
 
 
 
-xtreg logy femmina eta eta2 yedu sposato figli femfigli voteshare i.ireg i.wave if imm==1, fe robust
+*xtreg logy femmina eta eta2 yedu sposato figli femfigli voteshare i.ireg i.wave if imm==1, fe robust
 
 *drop if qualp10>4
 
@@ -463,20 +463,24 @@ xtreg logy femmina eta eta2 yedu sposato figli femfigli voteshare i.ireg i.wave 
 
 reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south voteshare dis if imm == 1, absorb(wave) cluster(id) resid
 
+estimates store model1imm
+
 predict residuals, resid
 
 // Generate a variable for the predicted values
 gen predicted = logy - residuals
 
 // Create a scatterplot of the residuals
-scatter residuals predicted if !missing(residuals, predicted)
+*scatter residuals predicted if !missing(residuals, predicted)
 
 drop predicted residuals
 
 
 * Regression for natives
 
-reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south voteshare dis if imm == 0, absorb(wave) cluster(id) resid
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south voteshare if imm == 0, absorb(wave) cluster(id) resid
+
+estimates store model1nat
 
 predict residuals, resid
 
@@ -484,12 +488,15 @@ predict residuals, resid
 gen predicted = logy - residuals
 
 // Create a scatterplot of the residuals
-scatter residuals predicted if !missing(residuals, predicted)
+*scatter residuals predicted if !missing(residuals, predicted)
 
 drop predicted residuals
 
 
 oaxaca logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south voteshare, by(imm) weight(1)
+
+estimates store model1oax
+
 
 
 
@@ -505,24 +512,42 @@ reghdfe logy imm oretot femmina eta eta2 yedu figli whitecollar bluecollar manag
 
 reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south voteshare voteshare2 dis if imm == 1, absorb(wave) cluster(id)
 
+estimates store model2imm
+
+
 * Regression for natives with the square of votes
 
-reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south voteshare voteshare2 dis if imm == 0, absorb(wave) cluster(id)
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south voteshare voteshare2 if imm == 0, absorb(wave) cluster(id)
+
+estimates store model2nat
+
 
 oaxaca logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south voteshare voteshare2, by(imm) weight(1)
+
+estimates store model2oax
+
 
 
 * Regression for immigrants with dummy for votes above the median
 
 reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south aboveshare dis if imm == 1, absorb(wave) cluster(id)
 
+estimates store model3imm
+
+
 
 * Regression for natives with dummy for votes above the median
 
-reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south aboveshare dis if imm == 0, absorb(wave) cluster(id)
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south aboveshare if imm == 0, absorb(wave) cluster(id)
+
+estimates store model3nat
 
 
 oaxaca logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south aboveshare, by(imm) weight(1)
+
+estimates store model3oax
+
+
 
 
 * Generate a new aboveshare dummy, for votes vetween median and 75th perc
@@ -539,12 +564,23 @@ replace aboveshare = 1 if voteshare>medianshare & voteshare<supershare
 
 reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south aboveshare extrashare dis if imm == 1, absorb(wave) cluster(id)
 
+estimates store model4imm
+
+
 
 * Regression for natives with dummy for votes above the median and dummy for above 75th percentile
 
-reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south aboveshare extrashare dis if imm == 0, absorb(wave) cluster(id)
+reghdfe logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south aboveshare extrashare if imm == 0, absorb(wave) cluster(id)
+
+estimates store model4nat
+
+
 
 oaxaca logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager northeast northwest south aboveshare extrashare, by(imm) weight(1)
+
+estimates store model4oax
+
+save "modifiedset.dta", replace
 
 
 
@@ -562,5 +598,45 @@ oaxaca logy oretot femmina eta eta2 yedu figli whitecollar bluecollar manager no
 * AGGIUNGI QUALCHE ALTRO CONTROLLO PER LE MACROAREE (CENTRO NORDEST NORDOVEST)
 
 summarize logy oretot femmina eta yedu figli whitecollar bluecollar manager northeast northwest south aboveshare extrashare voteshare
+
+*PRODUZIONE TABELLE LATEX. TENTATIVE SOLUTIONS
+
+esttab model1imm model1nat model3imm model3nat model4imm model4nat using "base.tex", r2 se(%8.2f)  b(%8.2f) compress replace drop(eta2 bluecollar _cons)
+
+
+
+* LET'S TRY TO DESIGN SOME MAPS!
+
+
+
+/* 2. Convert shapefile to Stata attribute and coordinate datasets */
+shp2dta using reg2023, data("reg-attr.dta") coord("reg-coord.dta") ///
+ genid(stid) gencentroids(cc) replace
+/* 3. Draw map */
+use "reg-attr.dta", clear
+
+rename COD_REG ireg
+merge 1:1 ireg using voteshare18.dta
+replace voteshare18=voteshare18*100
+spmap voteshare18 using "reg-coord.dta", id(stid) ocolor(black) fcolor(Blues2) osize(vthin)
+
+use "reg-attr.dta", clear
+
+rename COD_REG ireg
+
+merge 1:1 ireg using voteshare08.dta
+replace voteshare08=voteshare08*100
+spmap voteshare08 using "reg-coord.dta", id(stid) ocolor(black) fcolor(Blues2) osize(vthin)
+
+
+use "reg-attr.dta", clear
+
+rename COD_REG ireg
+
+merge 1:1 ireg using voteshare.dta
+replace voteshare13=voteshare13*100
+spmap voteshare13 using "reg-coord.dta", id(stid) ocolor(black) fcolor(Blues2) osize(vthin)
+
+
 
 
