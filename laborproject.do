@@ -603,6 +603,26 @@ summarize logy oretot femmina eta yedu figli whitecollar bluecollar manager nort
 
 esttab model1imm model1nat model3imm model3nat model4imm model4nat using "base.tex", r2 se(%8.2f)  b(%8.2f) compress replace drop(eta2 bluecollar _cons)
 
+twoway (line voteshare wave if ireg==1, sort) ///
+       (line voteshare wave if ireg==3, sort) ///
+       (line voteshare wave if ireg==4, sort) ///
+       (line voteshare wave if ireg==5, sort) ///
+       (line voteshare wave if ireg==6, sort) ///
+       (line voteshare wave if ireg==7, sort) ///
+       (line voteshare wave if ireg==8, sort) ///
+       (line voteshare wave if ireg==9, sort) ///
+       (line voteshare wave if ireg==10, sort) ///
+       (line voteshare wave if ireg==11, sort) ///
+       (line voteshare wave if ireg==12, sort) ///
+       (line voteshare wave if ireg==13, sort) ///
+       (line voteshare wave if ireg==14, sort) ///
+       (line voteshare wave if ireg==15, sort) ///
+       (line voteshare wave if ireg==16, sort) ///
+       (line voteshare wave if ireg==17, sort) ///
+       (line voteshare wave if ireg==18, sort) ///
+       (line voteshare wave if ireg==19, sort) ///
+       (line voteshare wave if ireg==20, sort)
+
 
 
 * LET'S TRY TO DESIGN SOME MAPS!
