@@ -584,6 +584,14 @@ save "modifiedset.dta", replace
 
 
 
+
+summarize y femmina eta yedu figli northwest northeast center south whitecollar bluecollar manager dis if imm==1
+
+summarize  femmina eta yedu figli northwest northeast center south whitecollar bluecollar manager if imm==0
+
+
+
+
 * per la regressione, inserire solo 2010 2014 e 2020. diue regressioni separate per native e immigrants. aggiungendo region fixed effects e wave fixed effects
 
 * si può anche aggiungere una dummy per risultati regionali rispetto la mediana, o due dummy, 50 e 75 % per edere monotonicità effettpo. altra possibilità eùè usare share e share al quadrato
@@ -602,6 +610,10 @@ summarize logy oretot femmina eta yedu figli whitecollar bluecollar manager nort
 *PRODUZIONE TABELLE LATEX. TENTATIVE SOLUTIONS
 
 esttab model1imm model1nat model3imm model3nat model4imm model4nat using "base.tex", r2 se(%8.2f)  b(%8.2f) compress replace drop(eta2 bluecollar _cons)
+
+esttab model1oax model3oax model4oax using "base.tex", r2 se(%8.2f)  b(%8.2f) compress replace drop(eta2 bluecollar _cons)
+
+
 
 twoway (line voteshare wave if ireg==1, sort) ///
        (line voteshare wave if ireg==3, sort) ///

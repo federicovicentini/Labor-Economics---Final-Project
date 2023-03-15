@@ -1,0 +1,1 @@
+To replicate the results, open the "laborproject.do" file in Stata, and modify the working directory. Every file needed for the replication should be already included in the folder.
